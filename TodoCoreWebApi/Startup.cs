@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NJsonSchema;
 using NSwag.AspNetCore;
+using System;
+using System.Net.Http;
 using System.Reflection;
 using TodoCoreWebApi.Models;
 
@@ -23,6 +26,17 @@ namespace TodoCoreWebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<TodoContext>(opt => opt.UseInMemoryDatabase("TodoList"));
+            
+            // Add service and create Policy with options 
+            services.AddCors(
+                options => { 
+                    options.AddPolicy("CorsPolicy",
+                        builder => builder.AllowAnyOrigin()
+                                        .AllowAnyHeader()
+                                        .AllowAnyMethod()
+                            ); 
+                    });
+
             services.AddMvc();
         }
 
@@ -43,7 +57,19 @@ namespace TodoCoreWebApi
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors("CorsPolicy");
+
+            app.MapWhen(context => context.Request.Method == HttpMethod.Options.ToString(), OptionsMiddleware);
+
             app.UseMvc();
         }
+
+        private static void OptionsMiddleware(IApplicationBuilder app)
+		{
+			app.Run(async context =>
+			{
+				await context.Response.WriteAsync("");
+			});
+		}
     }
 }

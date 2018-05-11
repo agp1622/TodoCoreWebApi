@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using TodoCoreWebApi.Models;
 
@@ -16,17 +17,18 @@ namespace TodoCoreWebApi.Controllers
         {
             _context = context;
 
-            if (_context.TodoItems.Count() == 0)
-            {
-                _context.TodoItems.Add(new TodoItem { Name = "Item1" });
-                _context.SaveChanges();
-            }
+            // if (_context.TodoItems.Count() == 0)
+            // {
+            //     _context.TodoItems.Add(new TodoItem { Title = "Item1" });
+            //     _context.SaveChanges();
+            // }
         }
 
         [HttpGet]
         public IEnumerable<TodoItem> GetAll()
         {
-            return _context.TodoItems.ToList();
+            var items = _context.TodoItems.ToList();
+            return items.Select(WithUrl);
         }
 
         [HttpGet("{id}", Name = "GetTodo")]
@@ -37,7 +39,7 @@ namespace TodoCoreWebApi.Controllers
             {
                 return NotFound();
             }
-            return new ObjectResult(item);
+            return new ObjectResult(WithSameUrl(item));
         }
 
         [HttpPost]
@@ -51,7 +53,7 @@ namespace TodoCoreWebApi.Controllers
             _context.TodoItems.Add(item);
             _context.SaveChanges();
 
-            return CreatedAtRoute("GetTodo", new { id = item.Id }, item);
+            return CreatedAtRoute("GetTodo", new { id = item.Id }, WithUrl(item));
         }
 
         [HttpPut("{id}")]
@@ -68,12 +70,46 @@ namespace TodoCoreWebApi.Controllers
                 return NotFound();
             }
 
-            todo.IsComplete = item.IsComplete;
-            todo.Name = item.Name;
+            todo.Completed = item.Completed;
+            todo.Title = item.Title;
+            todo.Order = item.Order;
 
             _context.TodoItems.Update(todo);
             _context.SaveChanges();
-            return new NoContentResult();
+
+            return new ObjectResult(WithSameUrl(todo));
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult Patch(long id, [FromBody] TodoItem item)
+        {
+            if (item == null )
+            {
+                return BadRequest();
+            }
+
+            var todo = _context.TodoItems.FirstOrDefault(t => t.Id == id);
+            if (todo == null)
+            {
+                return NotFound();
+            }
+
+            if (item.Order.HasValue)
+				todo.Order = item.Order;
+
+			if (item.Title != null)
+				todo.Title = item.Title;
+
+			if (item.Url != null)
+				todo.Url = item.Url;
+
+			if (item.Completed != todo.Completed)
+				todo.Completed = item.Completed;
+
+            _context.TodoItems.Update(todo);
+            _context.SaveChanges();
+
+            return new ObjectResult(WithSameUrl(todo));
         }
 
         [HttpDelete("{id}")]
@@ -89,5 +125,31 @@ namespace TodoCoreWebApi.Controllers
             _context.SaveChanges();
             return new NoContentResult();
         }
+
+        [HttpDelete]
+		public IActionResult Clear()
+		{
+			var todos = _context.TodoItems.ToList();
+            _context.TodoItems.RemoveRange(todos);
+            _context.SaveChanges();
+
+            return new NoContentResult();
+		}
+
+        private TodoItem WithSameUrl(TodoItem todo) {
+			// if (forceHttps)
+			// 	Request.IsHttps = true;
+
+			todo.Url = Request.GetEncodedUrl();
+			return todo;
+		}
+
+        private TodoItem WithUrl(TodoItem todo) {
+			// if (forceHttps)
+			// 	Request.IsHttps = true;
+
+			todo.Url = $"{Request.GetEncodedUrl()}/{todo.Id.ToString()}";
+			return todo;
+		}
     }
 }
