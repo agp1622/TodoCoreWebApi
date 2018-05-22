@@ -18,4 +18,4 @@ COPY --from=build-env /app/out .
 # ENTRYPOINT ["dotnet", "TodoCoreWebApi.dll"]
 
 # this is working
-CMD dotnet TodoCoreWebApi.dll
+CMD ASPNETCORE_URLS="http://*:$PORT" dotnet TodoCoreWebApi.dll

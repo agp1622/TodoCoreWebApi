@@ -12,6 +12,7 @@ namespace TodoCoreWebApi.Controllers
     public class TodoController : Controller
     {
         private readonly TodoContext _context;
+        private static readonly bool forceHttps = Environment.GetEnvironmentVariable("FORCE_HTTPS") == "1";
 
         public TodoController(TodoContext context)
         {
@@ -132,12 +133,22 @@ namespace TodoCoreWebApi.Controllers
 
         private TodoItem WithSameUrl(TodoItem todo)
         {
+            if (forceHttps)
+            {
+                Request.IsHttps = true;
+            }
+            
 			todo.Url = Request.GetEncodedUrl();
 			return todo;
 		}
 
         private TodoItem WithUrl(TodoItem todo) 
         {
+            if (forceHttps)
+            {
+                Request.IsHttps = true;
+            }
+				
 			todo.Url = $"{Request.GetEncodedUrl()}/{todo.Id.ToString()}";
 			return todo;
 		}

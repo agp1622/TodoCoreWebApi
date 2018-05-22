@@ -33,7 +33,6 @@ namespace TodoCoreWebApi
 
             var host = WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseUrls($"{scheme}://0.0.0.0:{port}")
                 .Build();
             
             return host;
