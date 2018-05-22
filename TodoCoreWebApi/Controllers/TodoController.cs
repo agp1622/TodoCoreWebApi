@@ -130,18 +130,14 @@ namespace TodoCoreWebApi.Controllers
             return new NoContentResult();
 		}
 
-        private TodoItem WithSameUrl(TodoItem todo) {
-			// if (forceHttps)
-			// 	Request.IsHttps = true;
-
+        private TodoItem WithSameUrl(TodoItem todo)
+        {
 			todo.Url = Request.GetEncodedUrl();
 			return todo;
 		}
 
-        private TodoItem WithUrl(TodoItem todo) {
-			// if (forceHttps)
-			// 	Request.IsHttps = true;
-
+        private TodoItem WithUrl(TodoItem todo) 
+        {
 			todo.Url = $"{Request.GetEncodedUrl()}/{todo.Id.ToString()}";
 			return todo;
 		}

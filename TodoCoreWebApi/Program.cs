@@ -17,9 +17,27 @@ namespace TodoCoreWebApi
             BuildWebHost(args).Run();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IWebHost BuildWebHost(string[] args)
+        {
+            var scheme = Environment.GetEnvironmentVariable("SCHEME");
+            if (string.IsNullOrWhiteSpace(scheme))
+            {
+                scheme = "http";
+            }
+
+            var port = Environment.GetEnvironmentVariable("PORT");
+            if (string.IsNullOrWhiteSpace(port))
+            {
+                port = "5000";
+            }
+
+            var host = WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
+                .UseUrls($"{scheme}://0.0.0.0:{port}")
                 .Build();
+            
+            return host;
+        }
+            
     }
 }

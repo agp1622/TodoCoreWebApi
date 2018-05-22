@@ -13,7 +13,9 @@ RUN dotnet publish -c Release -o out /p:PublishWithAspNetCoreTargetManifest="fal
 FROM microsoft/dotnet:2.0-runtime
 WORKDIR /app
 COPY --from=build-env /app/out .
+
 # not valid for Heroku
 # ENTRYPOINT ["dotnet", "TodoCoreWebApi.dll"]
+
 # this is working
-CMD ASPNETCORE_URLS="http://*:$PORT" dotnet TodoCoreWebApi.dll
+CMD dotnet TodoCoreWebApi.dll
